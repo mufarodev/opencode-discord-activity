@@ -1,4 +1,4 @@
-import { Client } from "@xhayper/discord-rpc";
+import { Client, SetActivity } from "@xhayper/discord-rpc";
 import type { PluginInput } from "@opencode-ai/plugin";
 
 type OpencodeClient = PluginInput["client"];
@@ -9,6 +9,17 @@ const client = new Client({
     clientId: DISCORD_CLIENT_RPC,
 });
 let loginSuccess = false;
+
+const baseActivity: SetActivity = {
+    largeImageKey: "opencode_logo_dark",
+    startTimestamp: Date.now(),
+};
+
+export const setActivity = async (activity?: SetActivity) => {
+    if (!loginSuccess) return;
+
+    await client.user?.setActivity({ ...activity, ...baseActivity });
+};
 
 export async function login(occlient: OpencodeClient) {
     let attempts = 0;
@@ -31,10 +42,7 @@ export async function login(occlient: OpencodeClient) {
             });
 
             if (client.user) {
-                await client.user.setActivity({
-                    largeImageKey: "opencode_logo_dark",
-                    startTimestamp: Date.now(),
-                });
+                await setActivity();
             }
             return;
         }
