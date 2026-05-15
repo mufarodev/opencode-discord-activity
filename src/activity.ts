@@ -8,20 +8,20 @@ const DISCORD_CLIENT_RPC = "1504974964032536808";
 const client = new Client({
     clientId: DISCORD_CLIENT_RPC,
 });
+let loginSuccess = false;
 
 export async function login(occlient: OpencodeClient) {
-    let success = false;
     let attempts = 0;
     const maxRetries = 3;
 
-    while (!success && attempts < maxRetries) {
+    while (!loginSuccess && attempts < maxRetries) {
         attempts++;
-        success = await client
+        loginSuccess = await client
             .login()
             .then(() => true)
             .catch(() => false);
 
-        if (success) {
+        if (loginSuccess) {
             await occlient.app.log({
                 body: {
                     service: "discord-rpc",
