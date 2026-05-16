@@ -9,16 +9,25 @@ const client = new Client({
     clientId: DISCORD_CLIENT_RPC,
 });
 let loginSuccess = false;
+let currentActivityState: Partial<SetActivity> = {};
+let pollInterval: ReturnType<typeof setInterval> | null = null;
 
 const baseActivity: SetActivity = {
     largeImageKey: "opencode_logo_dark",
     startTimestamp: Date.now(),
 };
 
-export const setActivity = async (activity?: SetActivity) => {
+export const updatePresenceState = (state: Partial<SetActivity>) => {
+    currentActivityState = { ...currentActivityState, ...state };
+};
+
+const pollDiscordActivity = async () => {
     if (!loginSuccess) return;
 
-    await client.user?.setActivity({ ...activity, ...baseActivity });
+    await client.user?.setActivity({
+        ...baseActivity,
+        ...currentActivityState,
+    });
 };
 
 export async function login(occlient: OpencodeClient) {
@@ -42,7 +51,8 @@ export async function login(occlient: OpencodeClient) {
             });
 
             if (client.user) {
-                await setActivity();
+                await pollDiscordActivity();
+                pollInterval = setInterval(pollDiscordActivity, 8 * 1000);
             }
             return;
         }
@@ -70,4 +80,11 @@ export async function login(occlient: OpencodeClient) {
     });
 
     await client.destroy().catch(() => {});
+}
+
+export function cleanup() {
+    if (pollInterval) {
+        clearInterval(pollInterval);
+    }
+    client.destroy().catch(() => {});
 }
